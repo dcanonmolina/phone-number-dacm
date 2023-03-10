@@ -25,7 +25,13 @@ exports.handler = function(context, event, callback) {
     pushCredentialSid: context.PUSH_NOTIFICATION
     });
 
+    const SyncGrant = AccessToken.SyncGrant;
+    const syncGrant = new SyncGrant({
+      serviceSid: context.TWILIO_SYNC_SERVICE
+    })
+
     token.addGrant(voiceGrant);
+    token.addGrant(syncGrant);
 
     const response = new Twilio.Response();
 

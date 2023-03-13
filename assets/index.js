@@ -15,7 +15,7 @@ $(document).ready(function(){
           })
           .then(function (response) {
 
-            initializePhoneNumber(response.data.token);
+            initializePhoneNumber(response.data.token, username);
 
             console.log(response);
             $("#phoneNumber").removeClass("invisible");
@@ -96,12 +96,14 @@ function initializeCallEvents(call){
        });
 }
 
-function initializePhoneNumber(token){
+function initializePhoneNumber(token, username){
     device = new Twilio.Device(token);
     device.register();
 
     device.addListener('registered', device => {
         console.log('The device is ready to receive incoming calls.')
+
+        registerDeviceToReceiveCalls(token, username);
       });
 
     device.on('incoming', call => {
@@ -116,4 +118,29 @@ function initializePhoneNumber(token){
     device.on('error', (twilioError, call) => {
         console.log('An error has occurred: ', twilioError);
        });
+}
+
+function registerDeviceToReceiveCalls(token, username){
+    var syncClient = new Twilio.Sync.Client(token);
+    
+    syncClient.map('PhoneDir')
+    .then((map) => {
+      console.log('Successfully opened a map. SID:', map.sid);
+      
+      map.get(username)
+            .then(item =>{
+                console.log("This item already exists in the phone dir")
+            })
+            .catch(err=>{
+                map.set(username,{name:username}, {ttl:7200}).then((item) => {
+                    console.log('Map SyncMapItem set() successful, item data:', item.data);
+                  })
+                  .catch((error) => {
+                    console.error('Map SyncMapItem set() failed', error);
+                  });
+            })
+    })
+    .catch((error) => {
+      console.error('Unexpected error', error);
+    });
 }

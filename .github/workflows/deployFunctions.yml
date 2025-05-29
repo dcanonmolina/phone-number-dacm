@@ -1,0 +1,34 @@
+name: Deploy Twilio Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install Twilio CLI
+      run: npm install -g twilio-cli
+
+    - name: Create Twilio Profile
+      env:
+        ACCOUNT_SID: ${{ secrets.ACCOUNT_SID }}
+        AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+      run: twilio profiles:create $ACCOUNT_SID --auth-token=$AUTH_TOKEN -p=MainAccount
+
+    - name: Use Twilio Profile
+      run: twilio profiles:use MainAccount
+
+    - name: Deploy Twilio Project
+      run: twilio serverless:deploy -p=MainAccount --force --override-existing-project --to=prod

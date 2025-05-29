@@ -25,7 +25,7 @@ jobs:
       env:
         ACCOUNT_SID: ${{ secrets.ACCOUNT_SID }}
         AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
-      run: twilio profiles:create $ACCOUNT_SID --auth-token=$AUTH_TOKEN -p=MainAccount
+      run: twilio profiles:create ${{ secrets.ACCOUNT_SID }} --auth-token=${{ secrets.AUTH_TOKEN }} -p=MainAccount
 
     - name: Use Twilio Profile
       run: twilio profiles:use MainAccount

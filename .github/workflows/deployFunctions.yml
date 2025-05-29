@@ -19,7 +19,9 @@ jobs:
         node-version: '20'
 
     - name: check environment variables
-      run: echo ${{ secrets.ACCOUNT_SID }}
+      env:
+        ACCOUNT_SID: ${{ secrets.ACCOUNT_SID }}
+      run: echo $SUPER_SECRET
 
     - name: Install Twilio CLI
       run: npm install -g twilio-cli

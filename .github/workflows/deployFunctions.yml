@@ -21,7 +21,7 @@ jobs:
     - name: check environment variables
       env:
         ACCOUNT_SID: ${{ secrets.ACCOUNT_SID }}
-      run: echo $ACCOUNT_SID
+      run: echo ${{ secrets.ACCOUNT_SID }}
 
     - name: Install Twilio CLI
       run: npm install -g twilio-cli

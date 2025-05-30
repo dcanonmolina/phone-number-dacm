@@ -85,6 +85,10 @@ async function  makeCall(number){
           To: number
         } 
       });
+
+    call.on('accept', call => {
+        console.log('The incoming call was accepted or the outgoing calls media session has finished setting up.');
+    });
       
     return call;
 }
@@ -93,7 +97,7 @@ function initializeCallEvents(inputnumber, call){
     console.log(call.parameters)
 
     syncList.push({
-        callSid: call.parameters.CallSid,
+        callSid: call.outboundConnectionId,
         number: inputnumber,
         date: new Date()
     },{ttl:21600})
@@ -178,18 +182,31 @@ function addDataToTable(index, doc){
     var cell5 = row.insertCell(4);
 
     cell1.innerHTML = index;
-    cell2.innerHTML = doc.date;
-    cell3.innerHTML = doc.callSid;
-    cell4.innerHTML = doc.number;
+    cell2.innerHTML = doc.number;
+    // Format date to a readable format
+    const date = new Date(doc.date);
+
+    const pad = n => n.toString().padStart(2, '0');
+    const formattedDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    cell3.innerHTML = formattedDate;
+
+    cell3.innerHTML = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    cell4.innerHTML = doc.callSid;
 
     const btn = document.createElement('BUTTON');
     btn.type = 'button';
     btn.innerHTML = 'RE DIAL';
     btn.className = 'redial btn btn-primary';
+    btn.onclick = function() {
+        $("#phoneDigits").val(doc.number);
+        actionCall("Call", doc.number);
+    };
 
     var input = document.createElement("input");
     input.setAttribute("type", "hidden");
     input.setAttribute("value", doc.number);
+
+
 
     cell5.appendChild(btn); 
     cell5.appendChild(input); 

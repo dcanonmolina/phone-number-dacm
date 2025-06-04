@@ -8,14 +8,14 @@
     "deploy": "twilio-run deploy"
   },
   "dependencies": {
-    "@twilio/runtime-handler": "1.2.3",
-    "@twilio/voice-sdk": "^2.1.1",
-    "twilio": "^3.56"
+    "@twilio/runtime-handler": "2.0.1",
+    "@twilio/voice-sdk": "^2.13.0",
+    "twilio": "^5.7"
   },
   "devDependencies": {
     "twilio-run": "^3.4.2"
   },
   "engines": {
-    "node": "14"
+    "node": "20"
   }
 }

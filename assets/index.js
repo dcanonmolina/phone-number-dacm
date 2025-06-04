@@ -76,138 +76,143 @@ $(document).ready(function(){
         }
     }
 
+    async function  makeCall(number){
+        call = await device.connect({ 
+            params: {
+            To: number
+            } 
+        });
 
-});
+        
+        return call;
+    }
 
-async function  makeCall(number){
-    call = await device.connect({ 
-        params: {
-          To: number
-        } 
-      });
-
-    call.on('accept', call => {
-        console.log('The incoming call was accepted or the outgoing calls media session has finished setting up.');
-    });
-      
-    return call;
-}
-
-function initializeCallEvents(inputnumber, call){
-    console.log(call.parameters)
-
-    syncList.push({
-        callSid: call.outboundConnectionId,
-        number: inputnumber,
-        date: new Date()
-    },{ttl:21600})
-    .then(item => console.log('item added in ', item.index))
-    .catch(error => console.error('error while adding item'));
-
-    call.on('disconnect', call => {
-        console.log('The call has been disconnected.');
+    function initializeCallEvents(inputnumber, call){
         console.log(call.parameters)
-        $("#btnllamar").show();
-         $("#btnColgar").hide();
-         $("#phoneDigits").val("");
-       });
 
-    call.on('cancel', () => {
-        console.log('The call has been canceled.');
-        $("#btnllamar").show();
-         $("#btnColgar").hide();
-         $("#phoneDigits").val("");
-       });
-}
+        syncList.push({
+            callSid: call.outboundConnectionId,
+            number: inputnumber,
+            date: new Date()
+        },{ttl:21600})
+        .then(item => console.log('item added in ', item.index))
+        .catch(error => console.error('error while adding item'));
 
-function initializePhoneNumber(token){
-    device = new Twilio.Device(token);
-    device.register();
+        call.on('disconnect', call => {
+            console.log('The call has been disconnected.');
+            console.log(call.parameters)
+            $("#btnllamar").show();
+            $("#btnColgar").hide();
+            $("#phoneDigits").val("");
+        });
 
-    device.addListener('registered', device => {
-        console.log('The device is ready to receive incoming calls.')
-      });
+        call.on('accept', call => {
+            console.log('The incoming call was accepted or the outgoing calls media session has finished setting up.');
+            console.log(call);
+        });
 
-    device.on('incoming', call => {
-        if(confirm("A call from " + call.callerInfo)){
-            call.accept();
-        }
-        else{
-            call.reject();
-        }
-    });
+        call.on('cancel', () => {
+            console.log('The call has been canceled.');
+            $("#btnllamar").show();
+            $("#btnColgar").hide();
+            $("#phoneDigits").val("");
+        });
+    }
 
-    device.on('error', (twilioError, call) => {
-        console.log('An error has occurred: ', twilioError);
-       });
-}
+    function initializePhoneNumber(token){
+        device = new Twilio.Device(token);
+        device.register();
+
+        device.addListener('registered', device => {
+            console.log('The device is ready to receive incoming calls.')
+        });
+
+        device.on('incoming', call => {
+            if(confirm("A call from " + call.callerInfo)){
+                call.accept();
+            }
+            else{
+                call.reject();
+            }
+        });
+
+        device.on('error', (twilioError, call) => {
+            console.log('An error has occurred: ', twilioError);
+        });
 
 
-const pageHandler = (paginator) => {
-    paginator.items.forEach((item) => {
-        addDataToTable(item.index, item.data);
-    });
-    return paginator.hasNextPage
-      ? paginator.nextPage().then(pageHandler)
-      : null;
-  };
 
-function initializeCallHistory(token, username){
-    syncClient =  new Twilio.Sync.Client(token);
+        
+    }
 
-    syncClient.list({id: username, ttl:43200})
-            .then(list =>{
-                syncList = list;
-                list.getItems({order:'asc'})
-                    .then(pageHandler)
-                    .catch(err =>console.error('An error has occurred in Twilio Sync: ', err))
 
-                list.on('itemAdded', args =>{
-                    addDataToTable(args.item.index, args.item.data);
-                })
-            })
-            .catch(err =>console.error('An error has occurred in Twilio Sync: ', err))
-
-}
-
-function addDataToTable(index, doc){
-
-    const addDataTable = document.getElementById('calls');
-    var row = addDataTable.insertRow(1);
-    
-    var cell1 = row.insertCell(0);
-    var cell2 = row.insertCell(1);
-    var cell3 = row.insertCell(2);
-    var cell4 = row.insertCell(3);
-    var cell5 = row.insertCell(4);
-
-    cell1.innerHTML = index;
-    cell2.innerHTML = doc.number;
-    // Format date to a readable format
-    const date = new Date(doc.date);
-
-    const pad = n => n.toString().padStart(2, '0');
-    const formattedDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-    cell3.innerHTML = formattedDate;
-
-    cell3.innerHTML = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    cell4.innerHTML = doc.callSid;
-
-    const btn = document.createElement('BUTTON');
-    btn.type = 'button';
-    btn.innerHTML = 'RE DIAL';
-    btn.className = 'redial btn btn-primary';
-    btn.onclick = function() {
-        $("#phoneDigits").val(doc.number);
-        actionCall("Call", doc.number);
+    const pageHandler = (paginator) => {
+        paginator.items.forEach((item) => {
+            addDataToTable(item.index, item.data);
+        });
+        return paginator.hasNextPage
+        ? paginator.nextPage().then(pageHandler)
+        : null;
     };
 
-    var input = document.createElement("input");
-    input.setAttribute("type", "hidden");
-    input.setAttribute("value", doc.number);
+    function initializeCallHistory(token, username){
+        syncClient =  new Twilio.Sync.Client(token);
+
+        syncClient.list({id: username, ttl:43200})
+                .then(list =>{
+                    syncList = list;
+                    list.getItems({order:'asc'})
+                        .then(pageHandler)
+                        .catch(err =>console.error('An error has occurred in Twilio Sync: ', err))
+
+                    list.on('itemAdded', args =>{
+                        addDataToTable(args.item.index, args.item.data);
+                    })
+                })
+                .catch(err =>console.error('An error has occurred in Twilio Sync: ', err))
+
+    }
+
+    function addDataToTable(index, doc){
+
+        const addDataTable = document.getElementById('calls');
+        var row = addDataTable.insertRow(1);
+        
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+
+        cell1.innerHTML = index;
+        cell2.innerHTML = doc.number;
+        // Format date to a readable format
+        const date = new Date(doc.date);
+
+        const pad = n => n.toString().padStart(2, '0');
+        const formattedDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+        cell3.innerHTML = formattedDate;
+
+        cell3.innerHTML = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        cell4.innerHTML = doc.callSid;
+
+        const btn = document.createElement('BUTTON');
+        btn.type = 'button';
+        btn.innerHTML = 'RE DIAL';
+        btn.className = 'redial btn btn-primary';
+        btn.onclick = function() {
+            $("#phoneDigits").val(doc.number);
+            actionCall("Call", doc.number);
+        };
+
+        var input = document.createElement("input");
+        input.setAttribute("type", "hidden");
+        input.setAttribute("value", doc.number);
 
 
 
-    cell5.appendChild(btn); 
-    cell5.appendChild(input); 
-}
+        cell5.appendChild(btn); 
+        cell5.appendChild(input); 
+    }
+
+});
